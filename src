@@ -1,0 +1,98 @@
+-- Cria um novo banco de dados chamado HotelManagementSystem
+CREATE DATABASE HotelManagementSystem;
+
+-- Seleciona o banco de dados HotelManagementSystem para que todos os comandos SQL seguintes sejam executados dentro dele
+USE HotelManagementSystem;
+
+-- Cria a tabela Hospedes para armazenar informações sobre os hóspedes
+CREATE TABLE Hospedes (
+    id_hospede INT AUTO_INCREMENT PRIMARY KEY, -- Campo de identificação único para cada hóspede, gerado automaticamente
+    nome VARCHAR(100) NOT NULL, -- Nome do hóspede, não pode ser nulo
+    telefone VARCHAR(15), -- Número de telefone do hóspede
+    email VARCHAR(100) -- Endereço de e-mail do hóspede
+);
+
+-- Cria a tabela Quartos para armazenar informações sobre os quartos disponíveis no hotel
+CREATE TABLE Quartos (
+    id_quarto INT AUTO_INCREMENT PRIMARY KEY, -- Campo de identificação único para cada quarto, gerado automaticamente
+    numero INT NOT NULL UNIQUE, -- Número do quarto, deve ser único
+    tipo VARCHAR(50), -- Tipo de quarto (e.g., Single, Double, Suite)
+    preco DECIMAL(10, 2) NOT NULL -- Preço do quarto, não pode ser nulo
+);
+
+-- Cria a tabela Reservas para armazenar informações sobre as reservas feitas pelos hóspedes
+CREATE TABLE Reservas (
+    id_reserva INT AUTO_INCREMENT PRIMARY KEY, -- Campo de identificação único para cada reserva, gerado automaticamente
+    id_hospede INT, -- Identificação do hóspede que fez a reserva, referência à tabela Hospedes
+    id_quarto INT, -- Identificação do quarto reservado, referência à tabela Quartos
+    data_checkin DATE NOT NULL, -- Data de check-in da reserva, não pode ser nula
+    data_checkout DATE NOT NULL, -- Data de check-out da reserva, não pode ser nula
+    FOREIGN KEY (id_hospede) REFERENCES Hospedes(id_hospede), -- Define a chave estrangeira para a tabela Hospedes
+    FOREIGN KEY (id_quarto) REFERENCES Quartos(id_quarto) -- Define a chave estrangeira para a tabela Quartos
+);
+
+-- Insere dados na tabela Hospedes
+INSERT INTO Hospedes (nome, telefone, email) VALUES
+('Maria Silva', '123456789', 'maria.silva@email.com'),
+('João Santos', '987654321', 'joao.santos@email.com'),
+('Ana Oliveira', '456123789', 'ana.oliveira@email.com'),
+('Carlos Pereira', '321654987', 'carlos.pereira@email.com'),
+('Fernanda Costa', '654321987', 'fernanda.costa@email.com');
+
+-- Insere dados na tabela Quartos
+INSERT INTO Quartos (numero, tipo, preco) VALUES
+(101, 'Single', 100.00),
+(102, 'Double', 150.00),
+(103, 'Suite', 250.00),
+(104, 'Single', 100.00),
+(105, 'Double', 150.00),
+(106, 'Suite', 250.00),
+(107, 'Single', 100.00),
+(108, 'Double', 150.00),
+(109, 'Suite', 250.00),
+(110, 'Single', 100.00);
+
+-- Insere dados na tabela Reservas
+INSERT INTO Reservas (id_hospede, id_quarto, data_checkin, data_checkout) VALUES
+(1, 101, '2024-08-15', '2024-08-20'),
+(2, 102, '2024-08-16', '2024-08-18'),
+(3, 103, '2024-08-10', '2024-08-15'),
+(4, 104, '2024-08-12', '2024-08-14'),
+(5, 105, '2024-08-17', '2024-08-22');
+
+-- Consulta todos os hóspedes com suas reservas, incluindo os detalhes do quarto reservado
+SELECT h.nome AS Hóspede, q.numero AS Quarto, q.tipo AS Tipo, q.preco AS Preço, r.data_checkin AS Checkin, r.data_checkout AS Checkout
+FROM Reservas r
+JOIN Hospedes h ON r.id_hospede = h.id_hospede -- Junta as tabelas Reservas e Hospedes usando a chave estrangeira
+JOIN Quartos q ON r.id_quarto = q.id_quarto; -- Junta as tabelas Reservas e Quartos usando a chave estrangeira
+
+-- Consulta todos os quartos disponíveis para um determinado período
+SELECT q.numero AS Quarto, q.tipo AS Tipo, q.preco AS Preço
+FROM Quartos q
+LEFT JOIN Reservas r ON q.id_quarto = r.id_quarto
+AND (r.data_checkin <= '2024-08-18' AND r.data_checkout >= '2024-08-16') -- Filtra as reservas que sobrepõem o período
+WHERE r.id_quarto IS NULL; -- Mostra somente os quartos que não estão reservados no período especificado
+
+-- Atualiza as informações de contato de um hóspede específico
+UPDATE Hospedes
+SET telefone = '1122334455', email = 'maria.silva@newemail.com'
+WHERE id_hospede = 1;
+
+-- Modifica o preço de um quarto específico
+UPDATE Quartos
+SET preco = 120.00
+WHERE id_quarto = 101;
+
+-- Exclui uma reserva específica
+DELETE FROM Reservas
+WHERE id_reserva = 4;
+
+-- Remove um hóspede do banco de dados e garante que todas as reservas associadas também sejam excluídas
+DELETE FROM Hospedes
+WHERE id_hospede = 5;
+
+-- Exclui todas as reservas associadas ao hóspede removido
+DELETE FROM Reservas
+WHERE id_hospede = 5;
+
+
